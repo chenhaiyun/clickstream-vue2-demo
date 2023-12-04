@@ -14,6 +14,7 @@
       </div>
     </div>
     <div class="col-md-6">
+      <button @click="simulateCrash">Crash</button>
       <h4>Tutorials List</h4>
       <ul class="list-group">
         <li class="list-group-item"
@@ -67,6 +68,10 @@ export default {
     };
   },
   methods: {
+    simulateCrash() {
+      // 故意制造一个错误
+      this.undefinedFunction();
+    },
     retrieveTutorials() {
       TutorialDataService.getAll()
         .then(response => {
