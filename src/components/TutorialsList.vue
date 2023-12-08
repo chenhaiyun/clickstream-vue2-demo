@@ -15,6 +15,8 @@
     </div>
     <div class="col-md-6">
       <button @click="simulateCrash">Crash</button>
+      <button @click="undefinedProperty">Undefined Property</button>
+      <button @click="unsupportedZero">1/0</button>
       <h4>Tutorials List</h4>
       <ul class="list-group">
         <li class="list-group-item"
@@ -31,6 +33,12 @@
         Remove All
       </button>
     </div>
+    <h1>Vue.js Socket.io Chat</h1>
+    <input v-model="message" @keyup.enter="sendMessage">
+    <button @click="sendMessage">Send</button>
+    <ul>
+      <li v-for="msg in messages" :key="msg">{{ msg }}</li>
+    </ul>
     <div class="col-md-6">
       <div v-if="currentTutorial">
         <h4>Tutorial</h4>
@@ -56,21 +64,56 @@
 
 <script>
 import TutorialDataService from "../services/TutorialDataService";
+import SocketioService from '../socketio';
 
 export default {
   name: "tutorials-list",
   data() {
     return {
+      socket: null,
+      message: '',
+      messages: [],
       tutorials: [],
       currentTutorial: null,
       currentIndex: -1,
       title: ""
     };
   },
+  sockets: {
+    connect() {
+      console.log('Connected to server');
+    },
+    disconnect() {
+      console.log('Disconnected from server');
+    },
+    'my broadcast'(msg) {
+      this.messages.push(msg);
+    }
+  },
   methods: {
+    disconnect() {
+        if (this.socket) {
+            this.socket.disconnect();
+        }
+    },
+    sendMessage() {
+      if (this.message.trim() !== '') {
+        // this.socket.emit('my message', 'Hello there from Vue.');
+        // this.socket.emit('chat message', this.message);
+        SocketioService.sendMessage(this.message);
+        this.message = '';
+      }
+    },
+    unsupportedZero() {
+      this.title = 1/0
+    },
     simulateCrash() {
       // 故意制造一个错误
       this.undefinedFunction();
+    },
+    undefinedProperty() {
+      // 故意制造一个错误
+      this.title = this.abc.undefinedProperty;
     },
     retrieveTutorials() {
       TutorialDataService.getAll()
@@ -118,6 +161,12 @@ export default {
   },
   mounted() {
     this.retrieveTutorials();
+  },
+  beforeUnmount() {
+    SocketioService.disconnect();
+  },
+  created() {
+    this.socket = SocketioService.setupSocketConnection();
   }
 };
 </script>
